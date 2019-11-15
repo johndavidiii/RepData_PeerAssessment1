@@ -1,0 +1,225 @@
+---
+title: "course5Project1"
+author: "ChanterJohnDavid"
+date: "11/1/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+Repo
+
+    Valid GitHub URL
+    At least one commit beyond the original fork
+    Valid SHA-1
+    SHA-1 corresponds to a specific commit
+
+Commit containing full submission
+
+    Code for reading in the dataset and/or processing the data
+    Histogram of the total number of steps taken each day
+    Mean and median number of steps taken each day
+    Time series plot of the average number of steps taken
+    The 5-minute interval that, on average, contains the maximum number of steps
+    Code to describe and show a strategy for imputing missing data
+    Histogram of the total number of steps taken each day after missing values are imputed
+    Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends
+    All of the R code needed to reproduce the results (numbers, plots, etc.) in the report
+    
+Imputing Data : I used is.na to detect NA values and I set them to 0 since 0 will not affect my calculations.  The plots did not make any sense when I did not set the NA values to 0.  All the plots save one show data that used my imputing strategy.  The plot that did not use the imputing strategy is clearly marked and is the Average Steps Taken per Five Minute interval across each day.
+
+All the code is here and is shown
+
+The Panel Plots are the paneled box plots at the end of the html output/
+```{r}
+library("dplyr")
+library("ggplot2")
+library("mlbench")
+library("caret")
+library("chron")
+
+
+
+activityDF <- read.csv(file="/Users/douglasashworth/Documents/Coursera/DataScience/Course5/activity.csv", stringsAsFactors = FALSE)
+
+activityDF$steps[is.na(activityDF$steps)] <- 0
+
+summary(activityDF)
+str(activityDF)
+names(activityDF)
+
+print(head(activityDF))
+print(summary(activityDF))
+print(str(activityDF))
+
+hist(activityDF$steps, col="green")
+maxCnt <- 2400/5 
+totalNumDays <- 0
+cntr <- 1
+
+while (cntr <= nrow(activityDF)){
+  
+  fiveMinCntr <- 0
+  while (fiveMinCntr <= 2355){
+     
+     cntr <- cntr + 1
+     fiveMinCntr <- fiveMinCntr + 5
+     
+  }
+  
+  totalNumDays <- totalNumDays + 1
+  
+} 
+ 
+fiveMinMatrix = matrix(nrow=473,ncol=totalNumDays)
+
+print(dim(fiveMinMatrix))
+ avStepsPerDay <- c()
+ medianStepsPerDay <- c()
+ maxStepsIntervalPerDay <- c()
+ maxStepPerDay <- c()
+ maxInterval <- c()
+ dailySteps <- c()
+ totalNumStepsPerDay <- c()
+ 
+ cntr <- 1
+ 
+ print(maxCnt)
+ fiveMinCntr <- 0
+ #print(nrow(activityDF))
+ print(activityDF$steps[0])
+ dayCntr <- 0
+ dCntr <- 1
+ weekDayStepsAry <- c()
+ weekendStepsAry <- c()
+ 
+
+while (cntr <= nrow(activityDF)){
+  
+   fiveMinCntr <- 0
+   tmpStepSum <- 0.0
+   tmpCntr <- 0
+   maxStep <- 0
+   tmpSteps <- 0
+   rowCntr <- 0
+   tmpStepAry <- c()
+   currentDate <- activityDF$date[cntr]
+   
+   if (!is.weekend(currentDate)){
+     wkdayFlag <- 1
+     wkendFlag <- 0
+   }else{
+     wkendFlag <- 1
+     wkdayFlag <- 0
+   }
+   
+   fCntr <- 1
+   while (fiveMinCntr <= 2355){
+     
+     tmpSteps <-  as.numeric(activityDF$steps[cntr])
+     tmpStepAry <- c(tmpStepAry,tmpSteps)
+
+     fiveMinMatrix[fCntr, dCntr] <- tmpSteps
+     
+     cntr <- cntr + 1
+     fiveMinCntr <- fiveMinCntr + 5
+     fCntr <- fCntr + 1
+     
+   }
+   
+   meanSteps <- mean(tmpStepAry)
+   medianSteps <- median(sort(tmpStepAry))
+   maxSteps <- max(tmpStepAry)
+   maxInterval <- which.max(tmpStepAry)*5
+   totalNumSteps <- sum(tmpStepAry)
+   
+   avStepsPerDay <- c(avStepsPerDay,meanSteps)
+   medianStepsPerDay <- c(medianStepsPerDay,medianSteps) 
+   maxStepPerDay <- c(maxStepPerDay,maxSteps)
+   maxStepsIntervalPerDay <- c(maxStepsIntervalPerDay,maxInterval)
+   totalNumStepsPerDay <- c(totalNumStepsPerDay,totalNumSteps)
+   
+   if (wkdayFlag == 1){
+     weekDayStepsAry <- c(weekDayStepsAry,meanSteps)
+   }else{
+     weekendStepsAry <- c(weekendStepsAry,meanSteps)
+   }
+   
+   dayCntr <- dayCntr + 1
+   dCntr <- dCntr + 1
+    
+}  
+print(dim(fiveMinMatrix))
+
+aveFiveMinStepsAryNA <- c()
+
+for (m in 1:nrow(fiveMinMatrix)){
+  
+  tmpSum <- 0.0
+  tmpAve <- 0.0
+  
+  tmpSum <- sum(fiveMinMatrix[m,])
+  tmpAve <- tmpSum/38
+  
+  aveFiveMinStepsAryNA <- c(aveFiveMinStepsAryNA,tmpAve)
+
+}
+
+
+aveFiveMinStepsAry <- c()
+
+fiveMinMatrix[is.na(fiveMinMatrix)] <- 0
+
+for (m in 1:nrow(fiveMinMatrix)){
+  
+  tmpSum <- 0.0
+  tmpAve <- 0.0
+  
+  tmpSum <- sum(fiveMinMatrix[m,])
+  tmpAve <- tmpSum/38
+  
+  aveFiveMinStepsAry <- c(aveFiveMinStepsAry,tmpAve)
+
+}
+
+print(length(aveFiveMinStepsAry))
+
+hist(totalNumStepsPerDay, col="blue",main="Total Number of Steps per Day")
+
+day <- 1:dayCntr
+fvNA <- 1:length(aveFiveMinStepsAryNA)
+qplot(fvNA,aveFiveMinStepsAryNA,geom = c("point","line"), xlab = "Five Minute Interval", ylab = "Average Number of Steps",  main = "Average Number of Steps per Five Minute Interval Across Each Day No Imputing Strategy")
+fv <- 1:length(aveFiveMinStepsAry)
+qplot(fv,aveFiveMinStepsAry,geom = c("point","line"), xlab = "Five Minute Interval", ylab = "Average Number of Steps",  main = "Average Number of Steps per Five Minute Interval Across Each Day using Imputing Strategy")
+qplot(day,totalNumStepsPerDay,geom = c("point","line"), main = "Total Number of Steps per Day")
+qplot(day,avStepsPerDay,geom = c("point", "line"),main="Average Number of Steps per Day")
+qplot(day,medianStepsPerDay,geom = c("point","line"),main = "Median Number of Steps per Day")
+qplot(day,maxStepPerDay,geom = c("point","line"), xlab = "Day",ylab = "Maximum Number of Steps",main = "Maxiumun Steps Per Day")
+qplot(day,maxStepsIntervalPerDay,geom = c("point","line"), xlab = "Day",ylab = "Maximum Five Minute Interval",main = "Maximun Step Interval Per Day")
+
+wkday <- 1:length(weekDayStepsAry)
+wkendDay <- 1:length(weekendStepsAry)
+par(mfrow = c(1,2))
+plot(wkday,weekDayStepsAry)
+plot(wkendDay,weekendStepsAry)
+
+par(mfrow = c(1,2))
+boxplot(weekDayStepsAry, main="Average Weekday Steps")
+boxplot(weekendStepsAry, main="Average Weekend Steps")
+#plot(maxStepsIntervalPerDay)
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{}
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
